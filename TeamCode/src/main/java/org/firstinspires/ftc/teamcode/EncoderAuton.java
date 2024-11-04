@@ -19,7 +19,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 
 
-@Autonomous(name = "EncoderAuton", group = "")
+@Autonomous(name = "EncoderAuton", group = "", preselectTeleOp = "Mecanum")
 public class EncoderAuton extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
@@ -29,10 +29,12 @@ public class EncoderAuton extends LinearOpMode {
     DcMotor motorBackRight;
     DcMotor motorArmRight;
     DcMotor motorArmLeft;
-    DcMotor motorElevator;
+    Servo servoElbowLeft;
+    Servo servoElbowRight;
     Servo servoWrist;
     Servo servoIntake;
     IMU imu;
+    boolean specimenScore;
     YawPitchRollAngles myRobotOrientation;
 
     @Override
@@ -46,9 +48,10 @@ public class EncoderAuton extends LinearOpMode {
         motorBackRight = hardwareMap.get(DcMotor.class, "backRight");
         motorArmRight  = hardwareMap.get(DcMotor.class, "armRight"); //Expansion
         motorArmLeft  = hardwareMap.get(DcMotor.class, "armLeft");
-        motorElevator = hardwareMap.get(DcMotor.class, "elevator");
-        servoWrist = hardwareMap.servo.get("wrist");
-        servoIntake = hardwareMap.servo.get("intake");
+        servoElbowLeft = hardwareMap.servo.get("elbowRight");
+        servoElbowRight = hardwareMap.servo.get("elbowLeft");
+        servoWrist = hardwareMap.servo.get("servoWrist");
+        servoIntake = hardwareMap.servo.get("servoIntake");
         imu = hardwareMap.get(IMU.class, "imu");
 
 
@@ -56,54 +59,75 @@ public class EncoderAuton extends LinearOpMode {
         motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
         motorFrontRight.setDirection(DcMotor.Direction.FORWARD);
         motorBackRight.setDirection(DcMotor.Direction.REVERSE);
-        motorElevator.setDirection(DcMotor.Direction.FORWARD);
-        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorArmRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorArmLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+
 
         double yaw = 0;
-        boolean slow = false;
-        int isFieldCentric = 1;
         imu.resetYaw();
-        init_Orientation();
+        specimenScore=false;
+
 
         motorArmLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorArmRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        sleep(3000);
 
-        motorElevator.setMode(STOP_AND_RESET_ENCODER);
-        motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
-        motorArmRight.setMode(STOP_AND_RESET_ENCODER);
+        resetOperatorEncoders();
+        resetDriveEncoders();
+
+        servoElbowLeft.setPosition(0.15);
+        servoElbowRight.setPosition(0.85);
+        servoWrist.setPosition(0.65);
+        servoIntake.setPosition(1);
 
 
-        resetEncoders();
+        // Wait for the game to start (driver presses START)
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
 
         waitForStart();
 
         if(opModeIsActive())
-        {
+        { //24 inches = 1 block
             sleep(200);
-            while(motorFrontLeft.getCurrentPosition() > -1000){ //about 24 inches/1 block
+            while(motorFrontLeft.getCurrentPosition() > -50){
                 drive(0, 0.3, 0);
             }
-            drive(0, 0, 0);
+            drive(0,0,0);
+            while(!specimenScore){
+                specimenScore();
+            }
+            while(motorFrontLeft.getCurrentPosition() > -1400){
+                driveSpecimen(0, 0.3, 0);
+            }
+            driveSpecimen(0, 0, 0);
+            stopMotors();
+            while(motorFrontLeft.getCurrentPosition() < -1200){
+                servoIntake.setPosition(0);
+                drive(0, -0.3, 0);
+            }
+            drive(0,0,0);
+            while(motorFrontLeft.getCurrentPosition() < -1000){
+                driveArmDown(0, -0.3, 0);
+            }
+            driveArmDown(0, 0.0, 0);
+            stopMotors();
 
-            sleep(1000);
-            while(motorFrontLeft.getCurrentPosition() > -2200){ //about 24 inches/1 block
+            while(motorFrontLeft.getCurrentPosition() > -2200){
                 drive(0.3, 0, 0);
             }
             drive(0, 0, 0);
 
             sleep(1000);
-            while(motorFrontLeft.getCurrentPosition() > -3500){ //about 24 inches/1 block
+            while(motorFrontLeft.getCurrentPosition() > -3500){
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
 
             sleep(200);
-            resetEncoders();
-
+            resetDriveEncoders();
             sleep(1000);
             while(motorFrontLeft.getCurrentPosition() > -1000){
                 drive(0, 0, 0.3);
@@ -113,8 +137,7 @@ public class EncoderAuton extends LinearOpMode {
         
     
 }
-    public void drive(double x, double y , double rx)
-    {
+    public void drive(double x, double y , double rx) {
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio, but only when
             // at least one is out of the range [-1, 1]
@@ -130,30 +153,200 @@ public class EncoderAuton extends LinearOpMode {
             telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
             telemetry.update();
     }
-    
-    public void resetEncoders(){
-        motorElevator.setMode(STOP_AND_RESET_ENCODER);
+    public void driveSpecimen(double x, double y , double rx) {
+        // Denominator is the largest motor power (absolute value) or 1
+        // This ensures all the powers maintain the same ratio, but only when
+        // at least one is out of the range [-1, 1]
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double frontLeftPower = (y + x + rx) / denominator;
+        double backLeftPower = (y - x + rx) / denominator;
+        double frontRightPower = (y - x - rx) / denominator;
+        double backRightPower = (y + x - rx) / denominator;
+        servoElbowLeft.setPosition(0.6);
+        servoElbowRight.setPosition(0.4);
+        servoWrist.setPosition(0.55);
+        motorFrontLeft.setPower(-frontLeftPower);
+        motorFrontRight.setPower(-frontRightPower);
+        motorBackLeft.setPower(-backLeftPower);
+        motorBackRight.setPower(-backRightPower);
+        goToPosition(-130, motorArmLeft);
+        goToPosition(-130, motorArmRight,motorArmLeft.getCurrentPosition());
+        telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
+        telemetry.update();
+    }
+    public void driveArmDown(double x, double y , double rx) {
+        // Denominator is the largest motor power (absolute value) or 1
+        // This ensures all the powers maintain the same ratio, but only when
+        // at least one is out of the range [-1, 1]
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double frontLeftPower = (y + x + rx) / denominator;
+        double backLeftPower = (y - x + rx) / denominator;
+        double frontRightPower = (y - x - rx) / denominator;
+        double backRightPower = (y + x - rx) / denominator;
+        motorFrontLeft.setPower(-frontLeftPower);
+        motorFrontRight.setPower(-frontRightPower);
+        motorBackLeft.setPower(-backLeftPower);
+        motorBackRight.setPower(-backRightPower);
+        goToPosition(0, motorArmLeft);
+        goToPosition(0, motorArmRight,motorArmLeft.getCurrentPosition());
+        servoElbowLeft.setPosition(0.15);
+        servoElbowRight.setPosition(0.85);
+        servoWrist.setPosition(0.65);
+        telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
+        telemetry.update();
+    }
+
+    public void stopMotors(){
+        motorArmLeft.setPower(0);
+        motorArmRight.setPower(0);
+    }
+
+    public void specimenScore() {
+        servoElbowLeft.setPosition(0.6);
+        servoElbowRight.setPosition(0.4);
+        goToPosition(-130, motorArmLeft);
+        goToPosition(-130, motorArmRight,motorArmLeft.getCurrentPosition());
+        servoWrist.setPosition(0.55);
+        if(((motorArmLeft.getCurrentPosition()-5)<-130)){
+            specimenScore=true;
+        }
+    }
+    public void armDown() {
+        servoElbowLeft.setPosition(0.15);
+        servoElbowRight.setPosition(0.85);
+        servoWrist.setPosition(0.65);
+        goToPosition(0, motorArmLeft);
+        goToPosition(0, motorArmRight,motorArmLeft.getCurrentPosition());
+    }
+
+
+
+    public void goToPosition(int target, DcMotor motor) {
+        int encoder = motor.getCurrentPosition();
+        int difference = (target - encoder);
+
+        if(difference > 10000)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 200)
+        {
+            motor.setPower(0.6);
+        }
+        else if(difference > 100)
+        {
+            motor.setPower(0.4);
+        }
+        else if(difference > 40)
+        {
+            motor.setPower(0.3);
+        }
+        else if(difference > 2.5)
+        {
+            motor.setPower(0.15);
+        }
+        else if(difference > 1.5)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -1.5)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -2.5)
+        {
+            motor.setPower(-0.15);
+        }
+        else if(difference > -40)
+        {
+            motor.setPower(-0.3);
+        }
+        else if(difference > -100)
+        {
+            motor.setPower(-0.4);
+        }
+        else if(difference > -200)
+        {
+            motor.setPower(-0.6);
+        }
+        else if(difference > -10000)
+        {
+            motor.setPower(-1.0);
+        }
+    }
+    public void goToPosition(int target, DcMotor motor, int encoder) {
+        int difference = (target - encoder);
+
+        if(difference > 10000)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 200)
+        {
+            motor.setPower(0.6);
+        }
+        else if(difference > 100)
+        {
+            motor.setPower(0.4);
+        }
+        else if(difference > 40)
+        {
+            motor.setPower(0.3);
+        }
+        else if(difference > 2.5)
+        {
+            motor.setPower(0.15);
+        }
+        else if(difference > 1.5)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -1.5)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -2.5)
+        {
+            motor.setPower(-0.15);
+        }
+        else if(difference > -40)
+        {
+            motor.setPower(-0.3);
+        }
+        else if(difference > -100)
+        {
+            motor.setPower(-0.4);
+        }
+        else if(difference > -200)
+        {
+            motor.setPower(-0.6);
+        }
+        else if(difference > -10000)
+        {
+            motor.setPower(-1.0);
+        }
+    }
+
+    public void resetOperatorEncoders(){
         motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
         motorArmRight.setMode(STOP_AND_RESET_ENCODER);
+        sleep(1);
+        motorArmLeft.setMode(RUN_USING_ENCODER);
+        motorArmRight.setMode(RUN_USING_ENCODER);
+    }
+    public void resetDriveEncoders(){
         motorFrontLeft.setMode(STOP_AND_RESET_ENCODER);
         motorFrontRight.setMode(STOP_AND_RESET_ENCODER);
         motorBackLeft.setMode(STOP_AND_RESET_ENCODER);
         motorBackRight.setMode(STOP_AND_RESET_ENCODER);
         sleep(1);
-        motorElevator.setMode(RUN_USING_ENCODER);
-        motorArmLeft.setMode(RUN_USING_ENCODER);
-        motorArmRight.setMode(RUN_USING_ENCODER);
         motorFrontLeft.setMode(RUN_USING_ENCODER);
         motorFrontRight.setMode(RUN_USING_ENCODER);
         motorBackLeft.setMode(RUN_USING_ENCODER);
         motorBackRight.setMode(RUN_USING_ENCODER);
     }
 
-    public void init_Orientation(){
-        RevHubOrientationOnRobot orientationOnRobot =
-                new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.RIGHT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-    }
+
 }
 
 
