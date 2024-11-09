@@ -1,26 +1,21 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.sampledata;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 
 
-@Autonomous(name = "EncoderAuton", group = "", preselectTeleOp = "Mecanum")
-public class EncoderAuton extends LinearOpMode {
+@Autonomous(name = "Left Side Auton", group = "", preselectTeleOp = "Mecanum")
+public class LeftSideAuton extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
     DcMotor motorFrontLeft;
@@ -78,7 +73,7 @@ public class EncoderAuton extends LinearOpMode {
 
         servoElbowLeft.setPosition(0.15);
         servoElbowRight.setPosition(0.85);
-        servoWrist.setPosition(0.65);
+        servoWrist.setPosition(0.1); //0.65
         servoIntake.setPosition(1);
 
 
@@ -89,54 +84,103 @@ public class EncoderAuton extends LinearOpMode {
 
         waitForStart();
 
-        if(opModeIsActive())
-        { //24 inches = 1 block
-            sleep(200);
-            while(motorFrontLeft.getCurrentPosition() > -50){
-                drive(0, 0.3, 0);
+        if(opModeIsActive()) { //24 inches = 1 block
+            while(motorFrontLeft.getCurrentPosition() > -100) {
+                driveSpecimen(0,0.3,0);
             }
-            drive(0,0,0);
+            driveSpecimen(0,0,0);
+
             while(!specimenScore){
                 specimenScore();
             }
-            while(motorFrontLeft.getCurrentPosition() > -1400){
-                driveSpecimen(0, 0.3, 0);
+
+            while(motorFrontLeft.getCurrentPosition() > -1350) {
+                driveSpecimen(0,0.3,0);
             }
-            driveSpecimen(0, 0, 0);
-            stopMotors();
-            while(motorFrontLeft.getCurrentPosition() < -1200){
-                servoIntake.setPosition(0);
-                drive(0, -0.3, 0);
+            driveSpecimen(0,0,0);
+            servoIntake.setPosition(0);
+
+            while(motorFrontLeft.getCurrentPosition() < -1000) {
+                driveSpecimen(0,-0.3,0);
             }
-            drive(0,0,0);
-            while(motorFrontLeft.getCurrentPosition() < -1000){
-                driveArmDown(0, -0.3, 0);
-            }
-            driveArmDown(0, 0.0, 0);
+            driveSpecimen(0,0,0);
             stopMotors();
 
-            while(motorFrontLeft.getCurrentPosition() > -2200){
-                drive(0.3, 0, 0);
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() < 200) { //-2200
+                driveArmDown(-0.3, 0, 0);
             }
-            drive(0, 0, 0);
+            driveArmDown(0, 0, 0);
+            stopMotors();
 
-            sleep(1000);
-            while(motorFrontLeft.getCurrentPosition() > -3500){
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > -1100) { //-3500
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
+            resetDriveEncoders();
 
             sleep(200);
-            resetDriveEncoders();
-            sleep(1000);
-            while(motorFrontLeft.getCurrentPosition() > -1000){
+            while (motorFrontLeft.getCurrentPosition() > -850) {
                 drive(0, 0, 0.3);
             }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+            servoIntake.setPosition(1);
+            servoWrist.setPosition(0.1);
 
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > -200) {
+                drive(0, 0.3, 0);
+            }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //-2100
+                drive(-0.3, 0, 0);
+            }
+            drive(0, 0, 0);
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > 200) { //about 24 inches/1 block
+                drive(0.3, 0, 0);
+            }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > -100) {
+                drive(0, 0.3, 0);
+            }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //about 24 inches/1 block
+                drive(-0.3, 0, 0);
+            }
+            drive(0, 0, 0);
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > 200) { //about 24 inches/1 block
+                drive(0.3, 0, 0);
+            }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() > -200) {
+                drive(0, 0.3, 0);
+            }
+            drive(0, 0, 0);
+            resetDriveEncoders();
+
+            sleep(200);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //about 24 inches/1 block
+                drive(-0.3, 0, 0);
+            }
+            drive(0, 0, 0);
         }
-        
-    
-}
+    }
     public void drive(double x, double y , double rx) {
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio, but only when
@@ -169,8 +213,8 @@ public class EncoderAuton extends LinearOpMode {
         motorFrontRight.setPower(-frontRightPower);
         motorBackLeft.setPower(-backLeftPower);
         motorBackRight.setPower(-backRightPower);
-        goToPosition(-130, motorArmLeft);
-        goToPosition(-130, motorArmRight,motorArmLeft.getCurrentPosition());
+        goToPosition(-135, motorArmLeft);
+        goToPosition(-135, motorArmRight,motorArmLeft.getCurrentPosition());
         telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
         telemetry.update();
     }
@@ -204,10 +248,10 @@ public class EncoderAuton extends LinearOpMode {
     public void specimenScore() {
         servoElbowLeft.setPosition(0.6);
         servoElbowRight.setPosition(0.4);
-        goToPosition(-130, motorArmLeft);
-        goToPosition(-130, motorArmRight,motorArmLeft.getCurrentPosition());
+        goToPosition(-135, motorArmLeft);
+        goToPosition(-135, motorArmRight,motorArmLeft.getCurrentPosition());
         servoWrist.setPosition(0.55);
-        if(((motorArmLeft.getCurrentPosition()-5)<-130)){
+        if(((motorArmLeft.getCurrentPosition()-10)<-135)){
             specimenScore=true;
         }
     }
@@ -231,43 +275,43 @@ public class EncoderAuton extends LinearOpMode {
         }
         else if(difference > 200)
         {
-            motor.setPower(0.6);
+            motor.setPower(0.8);
         }
         else if(difference > 100)
         {
-            motor.setPower(0.4);
+            motor.setPower(0.5);
         }
         else if(difference > 40)
+        {
+            motor.setPower(0.4);
+        }
+        else if(difference > 15)
         {
             motor.setPower(0.3);
         }
         else if(difference > 2.5)
         {
-            motor.setPower(0.15);
-        }
-        else if(difference > 1.5)
-        {
-            motor.setPower(0);
-        }
-        else if(difference > -1.5)
-        {
             motor.setPower(0);
         }
         else if(difference > -2.5)
         {
-            motor.setPower(-0.15);
+            motor.setPower(0);
         }
-        else if(difference > -40)
+        else if(difference > -15)
         {
             motor.setPower(-0.3);
         }
-        else if(difference > -100)
+        else if(difference > -40)
         {
             motor.setPower(-0.4);
         }
+        else if(difference > -100)
+        {
+            motor.setPower(-0.5);
+        }
         else if(difference > -200)
         {
-            motor.setPower(-0.6);
+            motor.setPower(-0.8);
         }
         else if(difference > -10000)
         {
@@ -283,43 +327,43 @@ public class EncoderAuton extends LinearOpMode {
         }
         else if(difference > 200)
         {
-            motor.setPower(0.6);
+            motor.setPower(0.8);
         }
         else if(difference > 100)
         {
-            motor.setPower(0.4);
+            motor.setPower(0.5);
         }
         else if(difference > 40)
+        {
+            motor.setPower(0.4);
+        }
+        else if(difference > 15)
         {
             motor.setPower(0.3);
         }
         else if(difference > 2.5)
         {
-            motor.setPower(0.15);
-        }
-        else if(difference > 1.5)
-        {
-            motor.setPower(0);
-        }
-        else if(difference > -1.5)
-        {
             motor.setPower(0);
         }
         else if(difference > -2.5)
         {
-            motor.setPower(-0.15);
+            motor.setPower(0);
         }
-        else if(difference > -40)
+        else if(difference > -15)
         {
             motor.setPower(-0.3);
         }
-        else if(difference > -100)
+        else if(difference > -40)
         {
             motor.setPower(-0.4);
         }
+        else if(difference > -100)
+        {
+            motor.setPower(-0.5);
+        }
         else if(difference > -200)
         {
-            motor.setPower(-0.6);
+            motor.setPower(-0.8);
         }
         else if(difference > -10000)
         {

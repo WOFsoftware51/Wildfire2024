@@ -55,6 +55,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 //import org.opencv.core.RotatedRect;
 
 import java.util.List;
+import java.util.Timer;
 
 
 @TeleOp(name="Mecanum")
@@ -62,6 +63,7 @@ public class Mecanum extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
     ElapsedTime runtime = new ElapsedTime();
+    private final Timer m_timer = new Timer();
     DcMotor motorFrontLeft;
     DcMotor motorBackLeft;
     DcMotor motorFrontRight;
@@ -117,7 +119,7 @@ public class Mecanum extends LinearOpMode {
 
         boolean slow = false;
         int isFieldCentric = 1;
-        imu.resetYaw();
+//        imu.resetYaw();
         init_Orientation();
         overideLimit = false;
 
@@ -141,22 +143,22 @@ public class Mecanum extends LinearOpMode {
 
 
 
-            if(gamepad2.a){
-                servoElbowLeft.setPosition(0.22);
-                servoElbowRight.setPosition(0.78);
-                servoWrist.setPosition(0.78);
-            }
-            else if(gamepad2.b){ //Specimun Score
+//            if(gamepad2.a){
+//                servoElbowLeft.setPosition(0.22);
+//                servoElbowRight.setPosition(0.78);
+//                servoWrist.setPosition(0.78);
+//            }
+            if(gamepad2.b){ //Specimun Score
                 servoElbowLeft.setPosition(0.57);
                 servoElbowRight.setPosition(0.43);
                 goToPosition(-130, motorArmLeft);
                 goToPosition(-130, motorArmRight,motorArmLeft.getCurrentPosition());
                 servoWrist.setPosition(0.55);
             }
-            else if(gamepad2.x){
-                servoElbowLeft.setPosition(0.85);
-                servoElbowRight.setPosition(0.15);
-            }
+//            else if(gamepad2.x){
+//                servoElbowLeft.setPosition(0.85);
+//                servoElbowRight.setPosition(0.15);
+//            }
             else if(gamepad2.y){ //HP
                 servoElbowLeft.setPosition(0.15);
                 servoElbowRight.setPosition(0.85);
@@ -194,8 +196,6 @@ public class Mecanum extends LinearOpMode {
             else if(gamepad2.left_trigger>0.8){
                 servoIntake.setPosition(0.5); //Open
             }
-
-
 
             if(gamepad2.back){
                 motorArmRight.setMode(STOP_AND_RESET_ENCODER);
@@ -295,16 +295,15 @@ public class Mecanum extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
+//            telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
+//            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
             telemetry.addData(centric, "Centric");
-//            telemetry.addData("Elevator Encoder", motorElevator.getCurrentPosition());
             telemetry.addData("Left arm Encoders", motorArmLeft.getCurrentPosition());
-            telemetry.addData("Right arm Encoders", motorArmRight.getCurrentPosition());
-            telemetry.addData("Left Arm Mode",motorArmLeft.getMode());
-            telemetry.addData("Right Arm Mode",motorArmRight.getMode());
+//            telemetry.addData("Left Arm Mode",motorArmLeft.getMode());
+//            telemetry.addData("Right Arm Mode",motorArmRight.getMode());
             telemetry.addData("Right Arm target",motorArmRight.getTargetPosition());
             telemetry.addData("Yaw", yaw);
+            telemetry.addData("frontLeft Encoder", motorFrontLeft.getCurrentPosition());
 
 
 //            telemetry.addData("Left Arm Velocity", motorArmLeft.getPower());
@@ -357,19 +356,27 @@ public class Mecanum extends LinearOpMode {
         }
         else if(difference > 40)
         {
-            motor.setPower(0.2);
+            motor.setPower(0.4);
+        }
+        else if(difference > 15)
+        {
+            motor.setPower(0.3);
         }
         else if(difference > 2.5)
         {
-            motor.setPower(0.1);
+            motor.setPower(0);
         }
         else if(difference > -2.5)
         {
-            motor.setPower(0.0);
+            motor.setPower(0);
+        }
+        else if(difference > -15)
+        {
+            motor.setPower(-0.3);
         }
         else if(difference > -40)
         {
-            motor.setPower(-0.2);
+            motor.setPower(-0.4);
         }
         else if(difference > -100)
         {
@@ -401,19 +408,27 @@ public class Mecanum extends LinearOpMode {
         }
         else if(difference > 40)
         {
-            motor.setPower(0.2);
+            motor.setPower(0.4);
+        }
+        else if(difference > 15)
+        {
+            motor.setPower(0.3);
         }
         else if(difference > 2.5)
         {
-            motor.setPower(0.1);
+            motor.setPower(0);
         }
         else if(difference > -2.5)
         {
-            motor.setPower(0.0);
+            motor.setPower(0);
+        }
+        else if(difference > -15)
+        {
+            motor.setPower(-0.3);
         }
         else if(difference > -40)
         {
-            motor.setPower(-0.2);
+            motor.setPower(-0.4);
         }
         else if(difference > -100)
         {
